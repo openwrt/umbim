@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include <libubox/utils.h>
 #include <libubox/uloop.h>
@@ -335,6 +336,24 @@ mbim_disconnect_request(void)
 	return mbim_send_command_msg();
 }
 
+static char*
+mbim_pin_sanitize(char *pin)
+{
+	char *p;
+
+	while (*pin && !isdigit(*pin))
+		pin++;
+	p = pin;
+	if (!*p)
+		return NULL;
+	while (*pin && isdigit(*pin))
+		pin++;
+	if (*pin)
+		*pin = '\0';
+
+	return p;
+}
+
 static int
 mbim_pin_unlock_request(void)
 {
@@ -342,6 +361,12 @@ mbim_pin_unlock_request(void)
 		(struct mbim_basic_connect_pin_s *) mbim_setup_command_msg(basic_connect,
 			MBIM_MESSAGE_COMMAND_TYPE_SET, MBIM_CMD_BASIC_CONNECT_PIN,
 			sizeof(struct mbim_basic_connect_pin_s));
+	char *pin = mbim_pin_sanitize(_argv[0]);
+
+	if (!pin || !strlen(pin)) {
+		fprintf(stderr, "failed to sanitize the pincode\n");
+		return -1;
+	}
 
 	p->pintype = htole32(MBIM_PIN_TYPE_PIN1);
 	p->pinoperation = htole32(MBIM_PIN_OPERATION_ENTER);
