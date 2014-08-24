@@ -316,7 +316,19 @@ mbim_connect_request(void)
 	memcpy(c->contexttype, uuid_context_type_internet, 16);
 	if (_argc > 0)
 		mbim_encode_string(&c->accessstring, *_argv);
+	if (_argc > 3) {
+		if (!strcmp(_argv[1], "pap"))
+			c->authprotocol = htole32(MBIM_AUTH_PROTOCOL_PAP);
+		else if (!strcmp(_argv[1], "chap"))
+			c->authprotocol = htole32(MBIM_AUTH_PROTOCOL_CHAP);
+		else if (!strcmp(_argv[1], "mschapv2"))
+			c->authprotocol = htole32(MBIM_AUTH_PROTOCOL_MSCHAPV2);
+		else
+			return -1;
 
+		mbim_encode_string(&c->username, _argv[2]);
+		mbim_encode_string(&c->password, _argv[3]);
+	}
 	return mbim_send_command_msg();
 }
 
