@@ -177,8 +177,8 @@ mbim_attach_response(void *buffer, int len)
 		mbim_enum_string(mbim_nw_error_values, le32toh(ps->nwerror)));
 	printf("  packetservicestate: %04X - %s\n", le32toh(ps->packetservicestate),
 		mbim_enum_string(mbim_packet_service_state_values, le32toh(ps->packetservicestate)));
-	printf("  uplinkspeed: %"PRIu64"\n", le64toh(ps->uplinkspeed));
-	printf("  downlinkspeed: %"PRIu64"\n", le64toh(ps->downlinkspeed));
+	printf("  uplinkspeed: %"PRIu64"\n", (uint64_t) le64toh(ps->uplinkspeed));
+	printf("  downlinkspeed: %"PRIu64"\n", (uint64_t) le64toh(ps->downlinkspeed));
 
 	if (MBIM_PACKET_SERVICE_STATE_ATTACHED == le32toh(ps->packetservicestate))
 		return 0;
