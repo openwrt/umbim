@@ -324,6 +324,7 @@ mbim_detach_request(void)
 static int
 mbim_connect_request(void)
 {
+	char *apn;
 	struct mbim_basic_connect_connect_s *c =
 		(struct mbim_basic_connect_connect_s *) mbim_setup_command_msg(basic_connect,
 			MBIM_MESSAGE_COMMAND_TYPE_SET, MBIM_CMD_BASIC_CONNECT_CONNECT,
@@ -332,8 +333,22 @@ mbim_connect_request(void)
 	c->activationcommand = htole32(MBIM_ACTIVATION_COMMAND_ACTIVATE);
 	c->iptype = htole32(MBIM_CONTEXT_IP_TYPE_DEFAULT);
 	memcpy(c->contexttype, uuid_context_type_internet, 16);
-	if (_argc > 0)
-		mbim_encode_string(&c->accessstring, *_argv);
+	if (_argc > 0) {
+		apn = index(*_argv, ':');
+		if (!apn) {
+			apn = *_argv;
+		} else {
+			apn[0] = 0;
+			apn++;
+			if (!strcmp(*_argv, "ipv4"))
+				c->iptype = htole32(MBIM_CONTEXT_IP_TYPE_IPV4);
+			else if (!strcmp(*_argv, "ipv6"))
+				c->iptype = htole32(MBIM_CONTEXT_IP_TYPE_IPV6);
+			else if (!strcmp(*_argv, "ipv4v6"))
+				c->iptype = htole32(MBIM_CONTEXT_IP_TYPE_IPV4V6);
+		}
+		mbim_encode_string(&c->accessstring, apn);
+	}
 	if (_argc > 3) {
 		if (!strcmp(_argv[1], "pap"))
 			c->authprotocol = htole32(MBIM_AUTH_PROTOCOL_PAP);
