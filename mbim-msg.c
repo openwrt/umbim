@@ -97,6 +97,16 @@ mbim_get_ipv4(void *buffer, char *out, uint32_t offset)
 	snprintf(out, 16, "%d.%d.%d.%d", b[0], b[1], b[2], b[3]);
 }
 
+void
+mbim_get_ipv6(void *buffer, char *out, uint32_t offset)
+{
+	uint8_t *b = buffer + offset;
+
+	snprintf(out, 40, "%x:%x:%x:%x:%x:%x:%x:%x", b[0] << 8 | b[1],
+		 b[2] << 8 | b[3], b[4] << 8 | b[5], b[6] << 8 | b[7],
+		 b[8] << 8 | b[9], b[10] << 8 | b[11], b[12] << 8 | b[13],
+		 b[14] << 8 | b[15]);
+}
 
 uint32_t
 mbim_get_int(void *buffer, uint32_t offset)

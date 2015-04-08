@@ -94,6 +94,7 @@ int mbim_send_command_msg(void);
 int mbim_add_payload(uint8_t len);
 int mbim_encode_string(struct mbim_string *str, char *in);
 void mbim_get_ipv4(void *buffer, char *out, uint32_t offset);
+void mbim_get_ipv6(void *buffer, char *out, uint32_t offset);
 uint32_t mbim_get_int(void *buffer, uint32_t offset);
 
 #endif

@@ -216,7 +216,7 @@ static int
 mbim_config_response(void *buffer, int len)
 {
 	struct mbim_basic_connect_ip_configuration_r *ip = (struct mbim_basic_connect_ip_configuration_r *) buffer;
-	char ipv4[16];
+	char out[40];
 	int i;
 	uint32_t offset;
 
@@ -228,22 +228,38 @@ mbim_config_response(void *buffer, int len)
 	if (le32toh(ip->ipv4configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS)
 		for (i = 0; i < le32toh(ip->ipv4addresscount); i++) {
 			offset = le32toh(ip->ipv4address) + (i * 4);
-			mbim_get_ipv4(buffer, ipv4, 4 + offset);
-			printf("  ipv4address: %s/%d\n", ipv4, mbim_get_int(buffer, offset));
+			mbim_get_ipv4(buffer, out, 4 + offset);
+			printf("  ipv4address: %s/%d\n", out, mbim_get_int(buffer, offset));
 		}
 	if (le32toh(ip->ipv4configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS) {
-		mbim_get_ipv4(buffer, ipv4, ip->ipv4gateway);
-		printf("  ipv4gateway: %s\n", ipv4);
+		mbim_get_ipv4(buffer, out, le32toh(ip->ipv4gateway));
+		printf("  ipv4gateway: %s\n", out);
 	}
 	if (le32toh(ip->ipv4configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU)
 		printf("  ipv4mtu: %d\n", le32toh(ip->ipv4mtu));
 	if (le32toh(ip->ipv4configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS)
 		for (i = 0; i < le32toh(ip->ipv4dnsservercount); i++) {
-			mbim_get_ipv4(buffer, ipv4, ip->ipv4dnsserver + (i * 4));
-			printf("  ipv4dnsserver: %s\n", ipv4);
+			mbim_get_ipv4(buffer, out, le32toh(ip->ipv4dnsserver) + (i * 4));
+			printf("  ipv4dnsserver: %s\n", out);
 		}
 
-	printf("  ipv6configurationavailable: %04X\n", le32toh(ip->ipv6configurationavailable));
+	if (le32toh(ip->ipv6configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS)
+		for (i = 0; i < le32toh(ip->ipv6addresscount); i++) {
+			offset = le32toh(ip->ipv6address) + (i * 16);
+			mbim_get_ipv6(buffer, out, 4 + offset);
+			printf("  ipv6address: %s/%d\n", out, mbim_get_int(buffer, offset));
+		}
+	if (le32toh(ip->ipv6configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS) {
+		mbim_get_ipv6(buffer, out, le32toh(ip->ipv6gateway));
+		printf("  ipv6gateway: %s\n", out);
+	}
+	if (le32toh(ip->ipv6configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU)
+		printf("  ipv6mtu: %d\n", le32toh(ip->ipv6mtu));
+	if (le32toh(ip->ipv6configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS)
+		for (i = 0; i < le32toh(ip->ipv6dnsservercount); i++) {
+			mbim_get_ipv6(buffer, out, le32toh(ip->ipv6dnsserver) + (i * 16));
+			printf("  ipv6dnsserver: %s\n", out);
+		}
 
 	return 0;
 }
