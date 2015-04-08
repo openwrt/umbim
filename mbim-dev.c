@@ -105,8 +105,10 @@ mbim_recv(struct uloop_fd *u, unsigned int events)
 			mbim_send_close_msg();
 		break;
 	case MBIM_MESSAGE_TYPE_COMMAND_DONE:
-		if (verbose)
+		if (verbose) {
+			printf("  command_id: %04X\n", le32toh(msg->command_id));
 			printf("  status_code: %04X\n", le32toh(msg->status_code));
+		}
 		if (msg->status_code && !msg->buffer_length)
 			return_code = -le32toh(msg->status_code);
 		else
