@@ -218,6 +218,7 @@ mbim_config_response(void *buffer, int len)
 	struct mbim_basic_connect_ip_configuration_r *ip = (struct mbim_basic_connect_ip_configuration_r *) buffer;
 	char ipv4[16];
 	int i;
+	uint32_t offset;
 
 	if (len < sizeof(struct mbim_basic_connect_ip_configuration_r)) {
 		fprintf(stderr, "message not long enough\n");
@@ -226,8 +227,9 @@ mbim_config_response(void *buffer, int len)
 
 	if (le32toh(ip->ipv4configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS)
 		for (i = 0; i < le32toh(ip->ipv4addresscount); i++) {
-			mbim_get_ipv4(buffer, ipv4, ip->ipv4address + (i * 4));
-			printf("  ipv4address: %s\n", ipv4);
+			offset = le32toh(ip->ipv4address) + (i * 4);
+			mbim_get_ipv4(buffer, ipv4, 4 + offset);
+			printf("  ipv4address: %s/%d\n", ipv4, mbim_get_int(buffer, offset));
 		}
 	if (le32toh(ip->ipv4configurationavailable) & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS) {
 		mbim_get_ipv4(buffer, ipv4, ip->ipv4gateway);

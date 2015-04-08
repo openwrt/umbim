@@ -97,6 +97,15 @@ mbim_get_ipv4(void *buffer, char *out, uint32_t offset)
 	snprintf(out, 16, "%d.%d.%d.%d", b[0], b[1], b[2], b[3]);
 }
 
+
+uint32_t
+mbim_get_int(void *buffer, uint32_t offset)
+{
+	uint32_t *i = buffer + offset;
+
+	return le32toh(*i);
+}
+
 const char*
 mbim_enum_string(struct mbim_enum *e, uint32_t key)
 {
