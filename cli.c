@@ -265,6 +265,20 @@ mbim_config_response(void *buffer, int len)
 }
 
 static int
+mbim_radio_response(void *buffer, int len)
+{
+	struct mbim_basic_connect_radio_state_r *r = (struct mbim_basic_connect_radio_state_r *) buffer;
+
+	if (len < sizeof(struct mbim_basic_connect_radio_state_r)) {
+		fprintf(stderr, "message not long enough\n");
+		return -1;
+	}
+	printf("  hwradiostate: %s\n", r->hwradiostate ? "on" : "off");
+	printf("  swradiostate: %s\n", r->swradiostate ? "on" : "off");
+	return 0;
+}
+
+static int
 mbim_device_caps_request(void)
 {
 	mbim_setup_command_msg(basic_connect, MBIM_MESSAGE_COMMAND_TYPE_QUERY, MBIM_CMD_BASIC_CONNECT_DEVICE_CAPS, 0);
@@ -430,6 +444,27 @@ mbim_config_request(void)
 	return mbim_send_command_msg();
 }
 
+static int
+mbim_radio_request(void)
+{
+	if (_argc > 0) {
+		struct mbim_basic_connect_radio_state_s *rs =
+			(struct mbim_basic_connect_radio_state_s *) mbim_setup_command_msg(basic_connect,
+			        MBIM_MESSAGE_COMMAND_TYPE_SET, MBIM_CMD_BASIC_CONNECT_RADIO_STATE,
+			        sizeof(struct mbim_basic_connect_radio_state_r));
+
+		if (!strcmp(_argv[0], "off"))
+			rs->radiostate = htole32(MBIM_RADIO_SWITCH_STATE_OFF);
+		else
+			rs->radiostate = htole32(MBIM_RADIO_SWITCH_STATE_ON);
+	} else {
+		mbim_setup_command_msg(basic_connect,
+			MBIM_MESSAGE_COMMAND_TYPE_QUERY, MBIM_CMD_BASIC_CONNECT_RADIO_STATE,
+			sizeof(struct mbim_basic_connect_radio_state_r));
+	}
+	return mbim_send_command_msg();
+}
+
 static struct mbim_handler handlers[] = {
 	{ "caps", 0, mbim_device_caps_request, mbim_device_caps_response },
 	{ "pinstate", 0, mbim_pin_state_request, mbim_pin_state_response },
@@ -441,12 +476,13 @@ static struct mbim_handler handlers[] = {
 	{ "connect", 0, mbim_connect_request, mbim_connect_response },
 	{ "disconnect", 0, mbim_disconnect_request, mbim_connect_response },
 	{ "config", 0, mbim_config_request, mbim_config_response },
+	{ "radio", 0, mbim_radio_request, mbim_radio_response },
 };
 
 static int
 usage(void)
 {
-	fprintf(stderr, "Usage: umbim <caps|pinstate|unlock|registration|subscriber|attach|detach|connect|disconnect|config> [options]\n"
+	fprintf(stderr, "Usage: umbim <caps|pinstate|unlock|registration|subscriber|attach|detach|connect|disconnect|config|radio> [options]\n"
 		"Options:\n"
 		"    -d <device>	the device (/dev/cdc-wdmX)\n"
 		"    -t <transaction>	the transaction id\n"
