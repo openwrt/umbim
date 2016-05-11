@@ -143,7 +143,9 @@ mbim_setup_command_msg(uint8_t *uuid, uint32_t type, uint32_t command_id, int le
 {
 	struct command_message *cmd = (struct command_message *) mbim_buffer;
 
-	memset(mbim_buffer, 0, MBIM_BUFFER_SIZE);
+	if (!mbim_buffer)
+		return NULL;
+	memset(mbim_buffer, 0, mbim_bufsize);
 
 	cmd->fragment_header.total = htole32(1);
 	cmd->fragment_header.current = htole32(0);
@@ -153,7 +155,7 @@ mbim_setup_command_msg(uint8_t *uuid, uint32_t type, uint32_t command_id, int le
 	cmd->buffer_length = htole32(len);
 
 	payload_offset = len;
-	payload_free = MBIM_BUFFER_SIZE - (sizeof(*cmd) + len);
+	payload_free = mbim_bufsize - (sizeof(*cmd) + len);
 	payload_len = 0;
 	payload_buffer = cmd->buffer;
 
@@ -165,6 +167,8 @@ mbim_send_command_msg(void)
 {
 	struct command_message *cmd = (struct command_message *) mbim_buffer;
 
+	if (!mbim_buffer)
+		return 0;
 	if (payload_len & 0x3) {
 		payload_len &= ~0x3;
 		payload_len += 4;
@@ -182,7 +186,7 @@ mbim_send_open_msg(void)
 	struct mbim_open_message *msg = (struct mbim_open_message *) mbim_buffer;
 
 	mbim_setup_header(&msg->header, MBIM_MESSAGE_TYPE_OPEN, sizeof(*msg));
-	msg->max_control_transfer = htole32(MBIM_BUFFER_SIZE);
+	msg->max_control_transfer = htole32(mbim_bufsize);
 
 	return mbim_send();
 }
@@ -192,8 +196,8 @@ mbim_send_close_msg(void)
 {
 	struct mbim_message_header *hdr = (struct mbim_message_header *) mbim_buffer;
 
-	if (no_close) {
-		uloop_end();
+	if (no_close || !mbim_buffer) {
+		mbim_end();
 		return 0;
 	}
 	mbim_setup_header(hdr, MBIM_MESSAGE_TYPE_CLOSE, sizeof(*hdr));

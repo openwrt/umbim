@@ -18,8 +18,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#define MBIM_BUFFER_SIZE	1024
-
 extern int return_code;
 extern int verbose;
 
