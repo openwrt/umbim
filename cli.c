@@ -446,7 +446,7 @@ static struct mbim_handler handlers[] = {
 static int
 usage(void)
 {
-	fprintf(stderr, "Usage: mbim <caps|pinstate|unlock|connect|disconnect> [options]\n"
+	fprintf(stderr, "Usage: umbim <caps|pinstate|unlock|registration|subscriber|attach|detach|connect|disconnect|config> [options]\n"
 		"Options:\n"
 		"    -d <device>	the device (/dev/cdc-wdmX)\n"
 		"    -t <transaction>	the transaction id\n"
