@@ -12,6 +12,8 @@
  * GNU General Public License for more details.
  */
 
+#include <linux/usb/cdc-wdm.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -132,13 +134,20 @@ mbim_recv(struct uloop_fd *u, unsigned int events)
 void
 mbim_open(const char *path)
 {
+	__u16 max;
+	int rc;
+
 	mbim_fd.cb = mbim_recv;
 	mbim_fd.fd = open(path, O_RDWR);
 	if (mbim_fd.fd < 1) {
 		perror("open failed: ");
 		exit(-1);
 	}
-	mbim_bufsize = MBIM_BUFFER_SIZE;
+	rc = ioctl(mbim_fd.fd, IOCTL_WDM_MAX_COMMAND, &max);
+	if (!rc)
+		mbim_bufsize = max;
+	else
+		mbim_bufsize = 512;
 	mbim_buffer = malloc(mbim_bufsize);
 	uloop_fd_add(&mbim_fd, ULOOP_READ);
 }
