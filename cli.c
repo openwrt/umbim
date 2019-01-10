@@ -297,7 +297,16 @@ mbim_pin_state_request(void)
 static int
 mbim_registration_request(void)
 {
-	mbim_setup_command_msg(basic_connect, MBIM_MESSAGE_COMMAND_TYPE_QUERY, MBIM_CMD_BASIC_CONNECT_REGISTER_STATE, 0);
+	if (_argc > 0) {
+		struct mbim_basic_connect_register_state_s *rs =
+			(struct mbim_basic_connect_register_state_s *) mbim_setup_command_msg(basic_connect,
+					MBIM_MESSAGE_COMMAND_TYPE_SET, MBIM_CMD_BASIC_CONNECT_REGISTER_STATE,
+					sizeof(struct mbim_basic_connect_register_state_s));
+
+		rs->registeraction = htole32(MBIM_REGISTER_ACTION_AUTOMATIC);
+	} else {
+		mbim_setup_command_msg(basic_connect, MBIM_MESSAGE_COMMAND_TYPE_QUERY, MBIM_CMD_BASIC_CONNECT_REGISTER_STATE, 0);
+	}
 
 	return mbim_send_command_msg();
 }
