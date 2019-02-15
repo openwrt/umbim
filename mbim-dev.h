@@ -21,6 +21,9 @@ extern int no_close;
 
 int mbim_send(void);
 void mbim_open(const char *path);
+#ifdef LIBQMI_MBIM_PROXY
+void mbim_proxy_open(const char *path);
+#endif
 void mbim_end(void);
 
 #endif

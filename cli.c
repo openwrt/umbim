@@ -493,6 +493,9 @@ usage(void)
 {
 	fprintf(stderr, "Usage: umbim <caps|pinstate|unlock|registration|subscriber|attach|detach|connect|disconnect|config|radio> [options]\n"
 		"Options:\n"
+#ifdef LIBQMI_MBIM_PROXY
+		"    -p			use mbim-proxy\n"
+#endif
 		"    -d <device>	the device (/dev/cdc-wdmX)\n"
 		"    -t <transaction>	the transaction id\n"
 		"    -n 		no close\n\n"
@@ -505,8 +508,11 @@ main(int argc, char **argv)
 {
 	char *cmd, *device = NULL;
 	int no_open = 0, ch, i;
+#ifdef LIBQMI_MBIM_PROXY
+	int proxy = 0;
+#endif
 
-	while ((ch = getopt(argc, argv, "nvd:t:")) != -1) {
+	while ((ch = getopt(argc, argv, "pnvd:t:")) != -1) {
 		switch (ch) {
 		case 'v':
 			verbose = 1;
@@ -521,6 +527,11 @@ main(int argc, char **argv)
 			no_open = 1;
 			transaction_id = atoi(optarg);
 			break;
+#ifdef LIBQMI_MBIM_PROXY
+		case 'p':
+			proxy = 1;
+			break;
+#endif
 		default:
 			return usage();
 		}
@@ -544,6 +555,11 @@ main(int argc, char **argv)
 
 	uloop_init();
 
+#ifdef LIBQMI_MBIM_PROXY
+	if (proxy)
+		mbim_proxy_open(device);
+	else
+#endif
 	mbim_open(device);
 	if (!no_open)
 		mbim_send_open_msg();

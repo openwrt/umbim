@@ -27,6 +27,15 @@
 
 #include "mbim.h"
 
+
+#ifdef LIBQMI_MBIM_PROXY
+#include <sys/socket.h>
+#include <sys/un.h>
+#include "data/mbim-service-proxy-control.h"
+
+uint8_t proxy_control[16] = { 0x83, 0x8c, 0xf7, 0xfb, 0x8d, 0x0d, 0x4d, 0x7f, 0x87, 0x1e, 0xd7, 0x1d, 0xbe, 0xfb, 0xb3, 0x9b };
+#endif
+
 size_t mbim_bufsize = 0;
 uint8_t *mbim_buffer = NULL;
 static struct uloop_fd mbim_fd;
@@ -114,6 +123,10 @@ mbim_recv(struct uloop_fd *u, unsigned int events)
 		}
 		if (msg->status_code && !msg->buffer_length)
 			return_code = -le32toh(msg->status_code);
+#ifdef LIBQMI_MBIM_PROXY
+		else if (le32toh(msg->command_id) == MBIM_CMD_PROXY_CONTROL_CONFIGURATION && !memcmp(msg->service_id, proxy_control, 16))
+			break;
+#endif
 		else
 			return_code = current_handler->response(msg->buffer, le32toh(msg->buffer_length));
 		if (return_code < 0)
@@ -151,6 +164,42 @@ mbim_open(const char *path)
 	mbim_buffer = malloc(mbim_bufsize);
 	uloop_fd_add(&mbim_fd, ULOOP_READ);
 }
+
+#ifdef LIBQMI_MBIM_PROXY
+static int
+mbim_send_proxy_msg(const char *path)
+{
+	struct mbim_proxy_control_configuration_s *p =
+		(struct mbim_proxy_control_configuration_s *) mbim_setup_command_msg(proxy_control,
+			MBIM_MESSAGE_COMMAND_TYPE_SET, MBIM_CMD_PROXY_CONTROL_CONFIGURATION,
+			sizeof(struct mbim_proxy_control_configuration_s));
+	mbim_encode_string(&p->devicepath, (char *)path);
+	p->timeout = htole32(30); // FIXME: hard coded timeout
+	return mbim_send_command_msg();
+}
+
+void
+mbim_proxy_open(const char *path)
+{
+	struct sockaddr_un addr = { .sun_family = AF_UNIX, .sun_path = "\0mbim-proxy" };
+
+	mbim_fd.cb = mbim_recv;
+	mbim_fd.fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (mbim_fd.fd < 1) {
+		perror("socket failed: ");
+		exit(-1);
+	}
+	if (connect(mbim_fd.fd, (struct sockaddr *)&addr, 13)) {
+		perror("failed to connect to mbim-proxy: ");
+		exit(-1);
+	}
+	mbim_bufsize = 512; // FIXME
+	mbim_buffer = malloc(mbim_bufsize);
+	uloop_fd_add(&mbim_fd, ULOOP_READ);
+	no_close = 1;
+	mbim_send_proxy_msg(path);
+}
+#endif
 
 void
 mbim_end(void)
