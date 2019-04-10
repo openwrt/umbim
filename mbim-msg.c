@@ -74,7 +74,7 @@ char *
 mbim_get_string(struct mbim_string *str, char *in)
 {
 	char *p = &in[le32toh(str->offset)];
-	int i;
+	unsigned int i;
 
 	if (!le32toh(str->offset))
 		return NULL;

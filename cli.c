@@ -42,7 +42,7 @@ static int _argc;
 static char **_argv;
 
 static int
-mbim_device_caps_response(void *buffer, int len)
+mbim_device_caps_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_device_caps_r *caps = (struct mbim_basic_connect_device_caps_r *) buffer;
 	char *deviceid, *firmwareinfo, *hardwareinfo;
@@ -74,7 +74,7 @@ mbim_device_caps_response(void *buffer, int len)
 }
 
 static int
-mbim_pin_state_response(void *buffer, int len)
+mbim_pin_state_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_pin_r *pin = (struct mbim_basic_connect_pin_r *) buffer;
 
@@ -96,7 +96,7 @@ mbim_pin_state_response(void *buffer, int len)
 }
 
 static int
-mbim_registration_response(void *buffer, int len)
+mbim_registration_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_register_state_r *state = (struct mbim_basic_connect_register_state_r *) buffer;
 	char *provider_id, *provider_name, *roamingtext;
@@ -131,11 +131,11 @@ mbim_registration_response(void *buffer, int len)
 }
 
 static int
-mbim_subscriber_response(void *buffer, int len)
+mbim_subscriber_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_subscriber_ready_status_r *state = (struct mbim_basic_connect_subscriber_ready_status_r *) buffer;
 	char *subscriberid, *simiccid;
-	int nr;
+	unsigned int nr;
 
 	if (len < sizeof(struct mbim_basic_connect_subscriber_ready_status_r)) {
 		fprintf(stderr, "message not long enough\n");
@@ -164,7 +164,7 @@ mbim_subscriber_response(void *buffer, int len)
 }
 
 static int
-mbim_attach_response(void *buffer, int len)
+mbim_attach_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_packet_service_r *ps = (struct mbim_basic_connect_packet_service_r *) buffer;
 
@@ -187,7 +187,7 @@ mbim_attach_response(void *buffer, int len)
 }
 
 static int
-mbim_connect_response(void *buffer, int len)
+mbim_connect_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_connect_r *c = (struct mbim_basic_connect_connect_r *) buffer;
 
@@ -213,11 +213,11 @@ mbim_connect_response(void *buffer, int len)
 }
 
 static int
-mbim_config_response(void *buffer, int len)
+mbim_config_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_ip_configuration_r *ip = (struct mbim_basic_connect_ip_configuration_r *) buffer;
 	char out[40];
-	int i;
+	unsigned int i;
 	uint32_t offset;
 
 	if (len < sizeof(struct mbim_basic_connect_ip_configuration_r)) {
@@ -265,7 +265,7 @@ mbim_config_response(void *buffer, int len)
 }
 
 static int
-mbim_radio_response(void *buffer, int len)
+mbim_radio_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_radio_state_r *r = (struct mbim_basic_connect_radio_state_r *) buffer;
 
@@ -507,7 +507,8 @@ int
 main(int argc, char **argv)
 {
 	char *cmd, *device = NULL;
-	int no_open = 0, ch, i;
+	int no_open = 0, ch;
+	unsigned int i;
 #ifdef LIBQMI_MBIM_PROXY
 	int proxy = 0;
 #endif

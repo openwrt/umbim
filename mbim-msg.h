@@ -79,7 +79,7 @@ struct indicate_status_message {
 } __attribute__((packed));
 
 typedef int (*_mbim_cmd_request)(void);
-typedef int (*_mbim_cmd_response)(void *buffer, int len);
+typedef int (*_mbim_cmd_response)(void *buffer, size_t len);
 
 extern uint8_t basic_connect[16];
 extern int transaction_id;

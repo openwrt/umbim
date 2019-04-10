@@ -56,7 +56,7 @@ int
 mbim_send(void)
 {
 	struct mbim_message_header *hdr = (struct mbim_message_header *) mbim_buffer;
-	int ret = 0;
+	unsigned int ret = 0;
 
 	if (le32toh(hdr->length) > mbim_bufsize) {
 		fprintf(stderr, "message too big %d\n", le32toh(hdr->length));
@@ -94,7 +94,7 @@ mbim_recv(struct uloop_fd *u, unsigned int events)
 	if (cnt < 0)
 		return;
 
-	if (cnt < sizeof(struct mbim_message_header)) {
+	if (cnt < (ssize_t) sizeof(struct mbim_message_header)) {
 		perror("failed to read() data: ");
 		return;
 	}
