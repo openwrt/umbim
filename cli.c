@@ -96,6 +96,32 @@ mbim_pin_state_response(void *buffer, size_t len)
 }
 
 static int
+mbim_home_provider_response(void *buffer, size_t len)
+{
+	struct mbim_basic_connect_home_provider_r *state = (struct mbim_basic_connect_home_provider_r *) buffer;
+	struct mbimprovider *provider;
+	char *provider_id, *provider_name;
+
+	if (len < sizeof(struct mbim_basic_connect_home_provider_r)) {
+		fprintf(stderr, "message not long enough\n");
+		return -1;
+	}
+
+	provider = &state->provider;
+	provider_id = mbim_get_string(&provider->providerid, buffer);
+	provider_name = mbim_get_string(&provider->providername, buffer);
+
+	printf("  provider_id: %s\n", provider_id);
+	printf("  provider_name: %s\n", provider_name);
+	printf("  cellularclass: %04X - %s\n", le32toh(provider->cellularclass),
+		mbim_enum_string(mbim_cellular_class_values, le32toh(provider->cellularclass)));
+	printf("  rssi: %04X\n", le32toh(provider->rssi));
+	printf("  errorrate: %04X\n", le32toh(provider->errorrate));
+
+	return 0;
+}
+
+static int
 mbim_registration_response(void *buffer, size_t len)
 {
 	struct mbim_basic_connect_register_state_r *state = (struct mbim_basic_connect_register_state_r *) buffer;
@@ -295,6 +321,14 @@ mbim_pin_state_request(void)
 }
 
 static int
+mbim_home_provider_request(void)
+{
+	mbim_setup_command_msg(basic_connect, MBIM_MESSAGE_COMMAND_TYPE_QUERY, MBIM_CID_BASIC_CONNECT_HOME_PROVIDER, 0);
+
+	return mbim_send_command_msg();
+}
+
+static int
 mbim_registration_request(void)
 {
 	if (_argc > 0) {
@@ -478,6 +512,7 @@ static struct mbim_handler handlers[] = {
 	{ "caps", 0, mbim_device_caps_request, mbim_device_caps_response },
 	{ "pinstate", 0, mbim_pin_state_request, mbim_pin_state_response },
 	{ "unlock", 1, mbim_pin_unlock_request, mbim_pin_state_response },
+	{ "home", 0, mbim_home_provider_request, mbim_home_provider_response },
 	{ "registration", 0, mbim_registration_request, mbim_registration_response },
 	{ "subscriber", 0, mbim_subscriber_request, mbim_subscriber_response },
 	{ "attach", 0, mbim_attach_request, mbim_attach_response },
@@ -491,7 +526,7 @@ static struct mbim_handler handlers[] = {
 static int
 usage(void)
 {
-	fprintf(stderr, "Usage: umbim <caps|pinstate|unlock|registration|subscriber|attach|detach|connect|disconnect|config|radio> [options]\n"
+	fprintf(stderr, "Usage: umbim <caps|pinstate|unlock|home|registration|subscriber|attach|detach|connect|disconnect|config|radio> [options]\n"
 		"Options:\n"
 #ifdef LIBQMI_MBIM_PROXY
 		"    -p			use mbim-proxy\n"
