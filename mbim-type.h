@@ -18,7 +18,7 @@
 struct mbim_string {
 	uint32_t offset;
 	uint32_t length;
-};
+} __attribute__((packed));
 
 struct mbim_enum {
 	uint32_t key;
