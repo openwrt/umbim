@@ -53,8 +53,10 @@ mbim_add_payload(uint8_t len)
 int
 mbim_encode_string(struct mbim_string *str, char *in)
 {
-	int l = strlen(in);
-	int s = mbim_add_payload(l * 2);
+	const int l = strlen(in);
+	const int utf16_len = l * 2;
+	const int pad_len = utf16_len % 4;
+	const int s = mbim_add_payload(utf16_len + pad_len);
 	uint8_t *p = &payload_buffer[s];
 	int i;
 
@@ -62,13 +64,13 @@ mbim_encode_string(struct mbim_string *str, char *in)
 		return -1;
 
 	str->offset = htole32(s);
-	str->length = htole32(l * 2);
+	str->length = htole32(utf16_len);
+
 	for (i = 0; i < l; i++)
 		p[i * 2] = in[i];
 
 	return 0;
 }
-
 
 char *
 mbim_get_string(struct mbim_string *str, char *in)
